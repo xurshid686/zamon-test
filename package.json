@@ -1,0 +1,13 @@
+{
+  "name": "zamonlar-test",
+  "version": "1.0.0",
+  "description": "English Tenses Test - Zamonlar Test",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python -m http.server 3000",
+    "build": "echo 'Build completed'"
+  },
+  "keywords": ["english", "tenses", "test", "education"],
+  "author": "xurshid686",
+  "license": "MIT"
+}

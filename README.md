@@ -12,4 +12,8 @@ This is an English tenses test focusing on Simple and Continuous forms with 20 q
 ## Setup
 1. Upload to GitHub
 2. Deploy on Vercel
-3. Configure Telegram bot in api/telegram.js
+3. Configure Telegram bot in Environment Variables
+
+## Environment Variables
+- TELEGRAM_BOT_TOKEN=your_bot_token
+- TELEGRAM_CHAT_ID=your_chat_id

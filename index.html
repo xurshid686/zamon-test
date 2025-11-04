@@ -190,6 +190,25 @@
             border-radius: 10px;
             margin-bottom: 20px;
         }
+
+        .telegram-status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .telegram-success {
+            background-color: #f0fff4;
+            color: #2d3748;
+            border: 1px solid #48bb78;
+        }
+
+        .telegram-error {
+            background-color: #fff5f5;
+            color: #2d3748;
+            border: 1px solid #f56565;
+        }
     </style>
 </head>
 <body>
@@ -234,6 +253,7 @@
             </div>
             <div class="score" id="finalScore"></div>
             <div class="result-text" id="resultText"></div>
+            <div id="telegramStatus"></div>
             <div class="detailed-results" id="detailedResults"></div>
             <button class="btn" onclick="restartTest()">Take Test Again</button>
         </div>
@@ -306,9 +326,9 @@
             },
             {
                 id: 10,
-                question: "Shhh! The baby ___.",
-                options: ["sleep", "sleeps", "is sleeping", "slept"],
-                correct: "is sleeping",
+                question: "Wait! I ___ with you.",
+                options: ["come", "comes", "am coming", "came"],
+                correct: "am coming",
                 tense: "Present Continuous"
             },
             {
@@ -334,9 +354,9 @@
             },
             {
                 id: 14,
-                question: "Wait! I ___ with you.",
-                options: ["come", "comes", "am coming", "came"],
-                correct: "am coming",
+                question: "She ___ for her exam these days.",
+                options: ["study", "studies", "is studying", "studied"],
+                correct: "is studying",
                 tense: "Present Continuous"
             },
             {
@@ -362,9 +382,9 @@
             },
             {
                 id: 18,
-                question: "She ___ for her exam these days.",
-                options: ["study", "studies", "is studying", "studied"],
-                correct: "is studying",
+                question: "They ___ a party next weekend.",
+                options: ["have", "has", "are having", "had"],
+                correct: "are having",
                 tense: "Present Continuous"
             },
             {
@@ -449,7 +469,7 @@
             }, 1000);
         }
 
-        function showResults() {
+        async function showResults() {
             document.getElementById('testScreen').classList.add('hidden');
             document.getElementById('resultsScreen').classList.remove('hidden');
             
@@ -475,43 +495,42 @@
                 detailedResults.appendChild(resultItem);
             });
             
-            sendResultsToTelegram(correctAnswers, totalQuestions, score);
+            await sendResultsToTelegram(correctAnswers, totalQuestions, score);
         }
 
-        function sendResultsToTelegram(correct, total, score) {
-            const message = `
-🎯 Zamonlar Test Results
-👤 Student: ${userName} ${userSurname}
-📊 Score: ${correct}/${total} (${score}%)
-📝 Test: Simple and Continuous Tenses
+        async function sendResultsToTelegram(correct, total, score) {
+            const messageData = {
+                name: userName,
+                surname: userSurname,
+                correctAnswers: correct,
+                totalQuestions: total,
+                score: score,
+                answers: userAnswers,
+                questions: questions
+            };
 
-Detailed Results:
-${userAnswers.map((answer, index) => 
-    `Q${index + 1}: ${answer.isCorrect ? '✅' : '❌'} - Your answer: "${answer.selected}" ${!answer.isCorrect ? `(Correct: "${answer.correct}")` : ''}`
-).join('\n')}
-
-🏆 Performance: ${score >= 80 ? 'Excellent!' : score >= 60 ? 'Good!' : 'Needs improvement!'}
-Test completed at: ${new Date().toLocaleString()}
-            `;
-
-            // Replace with your actual Telegram bot token and chat ID
-            const botToken = 'YOUR_BOT_TOKEN_HERE';
-            const chatId = 'YOUR_CHAT_ID_HERE';
+            const statusElement = document.getElementById('telegramStatus');
             
-            if (botToken && chatId && botToken !== 'YOUR_BOT_TOKEN_HERE') {
-                fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            try {
+                statusElement.innerHTML = '<div class="telegram-status">Sending results to Telegram...</div>';
+                
+                const response = await fetch('/api/telegram', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        chat_id: chatId,
-                        text: message,
-                        parse_mode: 'HTML'
-                    })
-                }).catch(error => {
-                    console.log('Telegram message not sent');
+                    body: JSON.stringify(messageData)
                 });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    statusElement.innerHTML = '<div class="telegram-status telegram-success">✅ Results sent to Telegram successfully!</div>';
+                } else {
+                    statusElement.innerHTML = `<div class="telegram-status telegram-error">❌ Failed to send to Telegram: ${result.error}</div>`;
+                }
+            } catch (error) {
+                statusElement.innerHTML = `<div class="telegram-status telegram-error">❌ Error sending to Telegram: ${error.message}</div>`;
             }
         }
 
@@ -522,6 +541,7 @@ Test completed at: ${new Date().toLocaleString()}
             document.getElementById('loginScreen').classList.remove('hidden');
             document.getElementById('name').value = '';
             document.getElementById('surname').value = '';
+            document.getElementById('telegramStatus').innerHTML = '';
         }
     </script>
 </body>
